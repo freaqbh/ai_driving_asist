@@ -1,0 +1,68 @@
+*.iml
+.gradle
+/local.properties
+/.idea/caches
+/.idea/libraries
+/.idea/modules.xml
+/.idea/workspace.xml
+/.idea/navEditor.xml
+/.idea/assetWizardSettings.xml
+.DS_Store
+/build
+/captures
+.externalNativeBuild
+.cxx
+local.properties
+app/src/main/assets/face_landmarker.task
+
+# =========================================
+# File dan Folder yang Dihasilkan oleh Build
+# Alasan: Dibuat otomatis dari source code, ukurannya besar, dan berbeda di setiap komputer.
+# =========================================
+build/
+*.apk
+*.aab
+*.ap_
+*.dex
+*.class
+gen/
+bin/
+
+# ================================================
+# File Lokal & Spesifik IDE (Android Studio/IntelliJ)
+# Alasan: Berisi pengaturan personal developer (layout window, path lokal) yang akan menyebabkan konflik jika dibagikan.
+# ================================================
+.idea/
+*.iml
+.gradle/
+local.properties
+captures/
+.DS_Store
+/misc.xml
+/deployment.xml
+/nav_graph.xml
+/assetWizardSettings.xml
+
+# ================================================
+# File Kunci & Informasi Sensitif (SANGAT PENTING!)
+# Alasan: Berisi kredensial rahasia. Jika bocor, orang lain bisa menyamar sebagai Anda atau mencuri data.
+# ================================================
+*.jks
+*.keystore
+signing.properties
+# uncomment to ignore google-services.json
+# google-services.json
+
+# =========================================
+# File Log dan Cache
+# Alasan: File sementara yang tidak relevan dengan source code.
+# =========================================
+*.log
+/build/reports/
+/build/test-results/
+/build/outputs/
+
+# =========================================
+# File bawaan OS
+# =========================================
+Thumbs.db
