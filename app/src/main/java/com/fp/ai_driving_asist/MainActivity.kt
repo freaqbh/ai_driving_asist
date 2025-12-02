@@ -24,18 +24,21 @@ class MainActivity : AppCompatActivity(), FaceLandmarkerHelper.LandmarkerListene
 
     private lateinit var binding: ActivityMainBinding
     private lateinit var faceLandmarkerHelper: FaceLandmarkerHelper
-    private lateinit var blinkDetector: BlinkDetector
-    private lateinit var drowsinessDetector: DrowsinessDetector
     private lateinit var cameraExecutor: ExecutorService
+    private lateinit var blinkDetector: BlinkDetector
+    private lateinit var yawnDetector: YawnDetector
+    private lateinit var drowsinessDetector: DrowsinessDetector
+    private lateinit var soundManager: SoundManager
 
     private val requestPermissionLauncher =
-        registerForActivityResult(ActivityResultContracts.RequestPermission()) { isGranted: Boolean ->
-            if (isGranted) {
-                startCamera()
-            } else {
-                Toast.makeText(this, "Camera permission required", Toast.LENGTH_SHORT).show()
+            registerForActivityResult(ActivityResultContracts.RequestPermission()) {
+                    isGranted: Boolean ->
+                if (isGranted) {
+                    startCamera()
+                } else {
+                    Toast.makeText(this, "Camera permission required", Toast.LENGTH_SHORT).show()
+                }
             }
-        }
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -43,69 +46,76 @@ class MainActivity : AppCompatActivity(), FaceLandmarkerHelper.LandmarkerListene
         binding = ActivityMainBinding.inflate(layoutInflater)
         setContentView(binding.root)
 
+        // Initialize helpers
+        faceLandmarkerHelper =
+                FaceLandmarkerHelper(
+                        context = this,
+                        runningMode = RunningMode.LIVE_STREAM,
+                        faceLandmarkerHelperListener = this
+                )
+        cameraExecutor = Executors.newSingleThreadExecutor()
+        blinkDetector = BlinkDetector()
+        yawnDetector = YawnDetector()
+        drowsinessDetector = DrowsinessDetector()
+        soundManager = SoundManager(this)
+
         ViewCompat.setOnApplyWindowInsetsListener(findViewById(R.id.main)) { v, insets ->
             val systemBars = insets.getInsets(WindowInsetsCompat.Type.systemBars())
             v.setPadding(systemBars.left, systemBars.top, systemBars.right, systemBars.bottom)
             insets
         }
 
-        cameraExecutor = Executors.newSingleThreadExecutor()
-        blinkDetector = BlinkDetector()
-        drowsinessDetector = DrowsinessDetector()
-
-        faceLandmarkerHelper =
-            FaceLandmarkerHelper(context = this, faceLandmarkerHelperListener = this)
-
-        if (
-            ContextCompat.checkSelfPermission(this, Manifest.permission.CAMERA) ==
-            PackageManager.PERMISSION_GRANTED
+        if (ContextCompat.checkSelfPermission(this, Manifest.permission.CAMERA) ==
+                        PackageManager.PERMISSION_GRANTED
         ) {
             startCamera()
         } else {
             requestPermissionLauncher.launch(Manifest.permission.CAMERA)
         }
+
+        binding.btnStopDriving.setOnClickListener { finish() }
     }
 
     private fun startCamera() {
         val cameraProviderFuture = ProcessCameraProvider.getInstance(this)
 
         cameraProviderFuture.addListener(
-            {
-                val cameraProvider: ProcessCameraProvider = cameraProviderFuture.get()
+                {
+                    val cameraProvider: ProcessCameraProvider = cameraProviderFuture.get()
 
-                val preview =
-                    Preview.Builder().build().also {
-                        it.setSurfaceProvider(binding.viewFinder.surfaceProvider)
-                    }
-
-                val imageAnalyzer =
-                    ImageAnalysis.Builder()
-                        .setBackpressureStrategy(
-                            ImageAnalysis.STRATEGY_KEEP_ONLY_LATEST
-                        )
-                        .setOutputImageFormat(
-                            ImageAnalysis.OUTPUT_IMAGE_FORMAT_RGBA_8888
-                        )
-                        .build()
-                        .also {
-                            it.setAnalyzer(cameraExecutor) { image ->
-                                faceLandmarkerHelper.detectLiveStream(
-                                    imageProxy = image,
-                                    isFrontCamera = true
-                                )
+                    val preview =
+                            Preview.Builder().build().also {
+                                it.setSurfaceProvider(binding.viewFinder.surfaceProvider)
                             }
-                        }
 
-                val cameraSelector = CameraSelector.DEFAULT_FRONT_CAMERA
+                    val imageAnalyzer =
+                            ImageAnalysis.Builder()
+                                    .setBackpressureStrategy(
+                                            ImageAnalysis.STRATEGY_KEEP_ONLY_LATEST
+                                    )
+                                    .setOutputImageFormat(
+                                            ImageAnalysis.OUTPUT_IMAGE_FORMAT_RGBA_8888
+                                    )
+                                    .build()
+                                    .also {
+                                        it.setAnalyzer(cameraExecutor) { image ->
+                                            faceLandmarkerHelper.detectLiveStream(
+                                                    imageProxy = image,
+                                                    isFrontCamera = true
+                                            )
+                                        }
+                                    }
 
-                try {
-                    cameraProvider.unbindAll()
-                    cameraProvider.bindToLifecycle(this, cameraSelector, preview, imageAnalyzer)
-                } catch (exc: Exception) {
-                    Log.e(TAG, "Use case binding failed", exc)
-                }
-            },
-            ContextCompat.getMainExecutor(this)
+                    val cameraSelector = CameraSelector.DEFAULT_FRONT_CAMERA
+
+                    try {
+                        cameraProvider.unbindAll()
+                        cameraProvider.bindToLifecycle(this, cameraSelector, preview, imageAnalyzer)
+                    } catch (exc: Exception) {
+                        Log.e(TAG, "Use case binding failed", exc)
+                    }
+                },
+                ContextCompat.getMainExecutor(this)
         )
     }
 
@@ -118,58 +128,86 @@ class MainActivity : AppCompatActivity(), FaceLandmarkerHelper.LandmarkerListene
 
         runOnUiThread {
             // gambar landmark
-            binding.overlay.setResults(
-                result,
-                resultBundle.inputImageHeight,
-                resultBundle.inputImageWidth,
-                RunningMode.LIVE_STREAM
-            )
+            /*binding.overlay.setResults(
+                    result,
+                    resultBundle.inputImageHeight,
+                    resultBundle.inputImageWidth,
+                    RunningMode.LIVE_STREAM
+            )*/
 
             val faces = result.faceLandmarks()
             if (faces.isNotEmpty()) {
                 val landmarks = faces[0]
 
                 val blinkResult =
-                    blinkDetector.process(
-                        landmarks,
-                        resultBundle.inputImageWidth,
-                        resultBundle.inputImageHeight
-                    )
+                        blinkDetector.process(
+                                landmarks,
+                                resultBundle.inputImageWidth,
+                                resultBundle.inputImageHeight
+                        )
 
                 binding.tvBlinkCount.text = "Blinks: ${blinkResult.blinkCount}"
 
-                val isDrowsy = drowsinessDetector.update(
-                    eyesClosed = blinkResult.eyesClosed,
-                    frameTimestampMs = result.timestampMs()
-                )
+                val yawnResult =
+                        yawnDetector.process(
+                                landmarks,
+                                resultBundle.inputImageWidth,
+                                resultBundle.inputImageHeight
+                        )
+
+                val drowsinessState =
+                        drowsinessDetector.update(
+                                eyesClosed = blinkResult.eyesClosed,
+                                isYawning = yawnResult.isYawning,
+                                frameTimestampMs = result.timestampMs()
+                        )
 
                 // Update status UI
-                when {
-                    isDrowsy -> {
+                when (drowsinessState) {
+                    DrowsinessDetector.DrowsinessState.SLEEPING -> {
+                        CustomToast.cancel()
+                        binding.tvStatus.text = "Status: SLEEPING"
+                        binding.tvStatus.setTextColor(
+                                ContextCompat.getColor(this, android.R.color.holo_red_dark)
+                        )
+                        CustomToast.show(
+                                this,
+                                "Anda Tertidur!",
+                                "Carilah Rest Area segera!!",
+                                CustomToast.ToastType.WARNING
+                        )
+                        soundManager.playSound()
+                    }
+                    DrowsinessDetector.DrowsinessState.DROWSY -> {
                         binding.tvStatus.text = "Status: DROWSY"
                         binding.tvStatus.setTextColor(
-                            ContextCompat.getColor(this, android.R.color.holo_red_light)
+                                ContextCompat.getColor(this, android.R.color.holo_red_light)
                         )
-                    }
-                    blinkResult.eyesClosed -> {
-                        binding.tvStatus.text = "Status: Eyes closed"
-                        binding.tvStatus.setTextColor(
-                            ContextCompat.getColor(this, android.R.color.holo_orange_light)
+                        CustomToast.show(
+                                this,
+                                "Anda Mengantuk!",
+                                "Carilah Rest Area untuk beristirahat sebentar",
+                                CustomToast.ToastType.WARNING
                         )
+                        soundManager.playSound()
                     }
                     else -> {
                         binding.tvStatus.text = "Status: SAFE"
                         binding.tvStatus.setTextColor(
-                            ContextCompat.getColor(this, android.R.color.holo_green_light)
+                                ContextCompat.getColor(this, android.R.color.holo_green_light)
                         )
+                        soundManager.stopSound()
+                        CustomToast.cancel()
                     }
                 }
 
-                binding.overlay.setDrowsyState(isDrowsy)
+                binding.overlay.setDrowsyState(
+                        drowsinessState != DrowsinessDetector.DrowsinessState.SAFE
+                )
             } else {
                 binding.tvStatus.text = "Status: No face detected"
                 binding.tvStatus.setTextColor(
-                    ContextCompat.getColor(this, android.R.color.darker_gray)
+                        ContextCompat.getColor(this, android.R.color.darker_gray)
                 )
                 binding.overlay.setDrowsyState(false)
             }

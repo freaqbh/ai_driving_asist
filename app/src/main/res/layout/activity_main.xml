@@ -5,31 +5,78 @@
     android:id="@+id/main"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
+    android:background="#F5F5F5"
     tools:context=".MainActivity">
 
-    <androidx.camera.view.PreviewView
-        android:id="@+id/viewFinder"
+    <!-- Camera Preview Area (Rounded Corners) -->
+    <androidx.cardview.widget.CardView
+        android:id="@+id/cameraContainer"
         android:layout_width="match_parent"
-        android:layout_height="match_parent"
-        app:scaleType="fillCenter" />
+        android:layout_height="0dp"
+        android:layout_margin="24dp"
+        app:cardCornerRadius="32dp"
+        app:cardElevation="0dp"
+        app:layout_constraintBottom_toTopOf="@id/bottomContainer"
+        app:layout_constraintTop_toTopOf="parent">
 
-    <com.fp.ai_driving_asist.OverlayView
-        android:id="@+id/overlay"
+        <androidx.camera.view.PreviewView
+            android:id="@+id/viewFinder"
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            app:scaleType="fillCenter" />
+
+        <com.fp.ai_driving_asist.OverlayView
+            android:id="@+id/overlay"
+            android:layout_width="match_parent"
+            android:layout_height="match_parent" />
+
+    </androidx.cardview.widget.CardView>
+
+    <!-- Bottom Container -->
+    <androidx.constraintlayout.widget.ConstraintLayout
+        android:id="@+id/bottomContainer"
         android:layout_width="match_parent"
-        android:layout_height="match_parent" />
+        android:layout_height="wrap_content"
+        android:background="@drawable/bottom_sheet_background"
+        android:padding="24dp"
+        app:layout_constraintBottom_toBottomOf="parent">
 
+        <com.google.android.material.button.MaterialButton
+            android:id="@+id/btnStopDriving"
+            android:layout_width="match_parent"
+            android:layout_height="60dp"
+            android:layout_marginHorizontal="24dp"
+            android:layout_marginBottom="24dp"
+            android:backgroundTint="#FFFFFF"
+            android:text="Stop Driving"
+            android:textAllCaps="false"
+            android:textColor="#000000"
+            android:textSize="18sp"
+            android:textStyle="bold"
+            app:cornerRadius="12dp"
+            app:layout_constraintBottom_toBottomOf="parent"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintTop_toTopOf="parent" />
+
+    </androidx.constraintlayout.widget.ConstraintLayout>
+
+    <!-- Hidden TextViews for Logic (or remove if not needed visually) -->
+    <!-- Keeping them for logic but making them invisible or moving them if needed -->
+    <!-- Actually, I will keep them but maybe overlay them on top if needed for debugging, 
+         but the design doesn't show them. I'll make them invisible or gone? 
+         Wait, the user wants "Anda Tertidur" toast, so maybe these textviews are not needed for UI anymore.
+         But the code uses them. I will keep them but make them GONE or invisible, 
+         OR I can just remove them from UI and update code to not crash. 
+         Better to keep them but hidden for now to minimize code changes, 
+         or just remove them if I update the code. 
+         I'll keep them but make them invisible/gone to match the clean design. -->
+    
     <TextView
         android:id="@+id/tvBlinkCount"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:layout_marginTop="50dp"
-        android:background="#80000000"
-        android:padding="16dp"
-        android:text="Blinks: 0"
-        android:textColor="#FFFFFF"
-        android:textSize="24sp"
-        android:textStyle="bold"
-        app:layout_constraintEnd_toEndOf="parent"
+        android:visibility="gone"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toTopOf="parent" />
 
@@ -37,12 +84,8 @@
         android:id="@+id/tvStatus"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:text="Status: Initializing..."
-        android:textSize="20sp"
-        android:textStyle="bold"
-        android:textColor="@android:color/holo_blue_light"
-        android:layout_margin="16dp"
-        android:background="@android:color/transparent"
-        android:elevation="10dp"/>
+        android:visibility="gone"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toTopOf="parent" />
 
 </androidx.constraintlayout.widget.ConstraintLayout>

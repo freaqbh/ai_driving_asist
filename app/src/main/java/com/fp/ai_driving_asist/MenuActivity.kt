@@ -2,7 +2,6 @@ package com.fp.ai_driving_asist
 
 import android.content.Intent
 import android.os.Bundle
-import android.widget.Toast
 import androidx.appcompat.app.AppCompatActivity
 import com.fp.ai_driving_asist.databinding.ActivityMenuBinding
 
@@ -24,8 +23,22 @@ class MenuActivity : AppCompatActivity() {
             startActivity(intent)
         }
 
-        binding.btnSettings.setOnClickListener {
-            Toast.makeText(this, "Settings coming soon!", Toast.LENGTH_SHORT).show()
+        binding.tvForgotPassword.setOnClickListener {
+            CustomToast.show(
+                    this,
+                    "Fitur akan segera dibuat",
+                    "Stay tuned twin",
+                    CustomToast.ToastType.INFO
+            )
+        }
+
+        binding.tvCreateAccount.setOnClickListener {
+            CustomToast.show(
+                    this,
+                    "Fitur akan segera dibuat",
+                    "Stay tuned twin",
+                    CustomToast.ToastType.INFO
+            )
         }
     }
 }
