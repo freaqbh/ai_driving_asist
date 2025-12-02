@@ -25,17 +25,17 @@ class MainActivity : AppCompatActivity(), FaceLandmarkerHelper.LandmarkerListene
     private lateinit var binding: ActivityMainBinding
     private lateinit var faceLandmarkerHelper: FaceLandmarkerHelper
     private lateinit var blinkDetector: BlinkDetector
+    private lateinit var drowsinessDetector: DrowsinessDetector
     private lateinit var cameraExecutor: ExecutorService
 
     private val requestPermissionLauncher =
-            registerForActivityResult(ActivityResultContracts.RequestPermission()) {
-                    isGranted: Boolean ->
-                if (isGranted) {
-                    startCamera()
-                } else {
-                    Toast.makeText(this, "Camera permission required", Toast.LENGTH_SHORT).show()
-                }
+        registerForActivityResult(ActivityResultContracts.RequestPermission()) { isGranted: Boolean ->
+            if (isGranted) {
+                startCamera()
+            } else {
+                Toast.makeText(this, "Camera permission required", Toast.LENGTH_SHORT).show()
             }
+        }
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -51,12 +51,14 @@ class MainActivity : AppCompatActivity(), FaceLandmarkerHelper.LandmarkerListene
 
         cameraExecutor = Executors.newSingleThreadExecutor()
         blinkDetector = BlinkDetector()
+        drowsinessDetector = DrowsinessDetector()
 
         faceLandmarkerHelper =
-                FaceLandmarkerHelper(context = this, faceLandmarkerHelperListener = this)
+            FaceLandmarkerHelper(context = this, faceLandmarkerHelperListener = this)
 
-        if (ContextCompat.checkSelfPermission(this, Manifest.permission.CAMERA) ==
-                        PackageManager.PERMISSION_GRANTED
+        if (
+            ContextCompat.checkSelfPermission(this, Manifest.permission.CAMERA) ==
+            PackageManager.PERMISSION_GRANTED
         ) {
             startCamera()
         } else {
@@ -68,42 +70,42 @@ class MainActivity : AppCompatActivity(), FaceLandmarkerHelper.LandmarkerListene
         val cameraProviderFuture = ProcessCameraProvider.getInstance(this)
 
         cameraProviderFuture.addListener(
-                {
-                    val cameraProvider: ProcessCameraProvider = cameraProviderFuture.get()
+            {
+                val cameraProvider: ProcessCameraProvider = cameraProviderFuture.get()
 
-                    val preview =
-                            Preview.Builder().build().also {
-                                it.setSurfaceProvider(binding.viewFinder.surfaceProvider)
-                            }
-
-                    val imageAnalyzer =
-                            ImageAnalysis.Builder()
-                                    .setBackpressureStrategy(
-                                            ImageAnalysis.STRATEGY_KEEP_ONLY_LATEST
-                                    )
-                                    .setOutputImageFormat(
-                                            ImageAnalysis.OUTPUT_IMAGE_FORMAT_RGBA_8888
-                                    )
-                                    .build()
-                                    .also {
-                                        it.setAnalyzer(cameraExecutor) { image ->
-                                            faceLandmarkerHelper.detectLiveStream(
-                                                    imageProxy = image,
-                                                    isFrontCamera = true
-                                            )
-                                        }
-                                    }
-
-                    val cameraSelector = CameraSelector.DEFAULT_FRONT_CAMERA
-
-                    try {
-                        cameraProvider.unbindAll()
-                        cameraProvider.bindToLifecycle(this, cameraSelector, preview, imageAnalyzer)
-                    } catch (exc: Exception) {
-                        Log.e(TAG, "Use case binding failed", exc)
+                val preview =
+                    Preview.Builder().build().also {
+                        it.setSurfaceProvider(binding.viewFinder.surfaceProvider)
                     }
-                },
-                ContextCompat.getMainExecutor(this)
+
+                val imageAnalyzer =
+                    ImageAnalysis.Builder()
+                        .setBackpressureStrategy(
+                            ImageAnalysis.STRATEGY_KEEP_ONLY_LATEST
+                        )
+                        .setOutputImageFormat(
+                            ImageAnalysis.OUTPUT_IMAGE_FORMAT_RGBA_8888
+                        )
+                        .build()
+                        .also {
+                            it.setAnalyzer(cameraExecutor) { image ->
+                                faceLandmarkerHelper.detectLiveStream(
+                                    imageProxy = image,
+                                    isFrontCamera = true
+                                )
+                            }
+                        }
+
+                val cameraSelector = CameraSelector.DEFAULT_FRONT_CAMERA
+
+                try {
+                    cameraProvider.unbindAll()
+                    cameraProvider.bindToLifecycle(this, cameraSelector, preview, imageAnalyzer)
+                } catch (exc: Exception) {
+                    Log.e(TAG, "Use case binding failed", exc)
+                }
+            },
+            ContextCompat.getMainExecutor(this)
         )
     }
 
@@ -115,22 +117,61 @@ class MainActivity : AppCompatActivity(), FaceLandmarkerHelper.LandmarkerListene
         val result = resultBundle.result
 
         runOnUiThread {
+            // gambar landmark
             binding.overlay.setResults(
-                    result,
-                    resultBundle.inputImageHeight,
-                    resultBundle.inputImageWidth,
-                    RunningMode.LIVE_STREAM
+                result,
+                resultBundle.inputImageHeight,
+                resultBundle.inputImageWidth,
+                RunningMode.LIVE_STREAM
             )
 
-            if (result.faceLandmarks().isNotEmpty()) {
-                val landmarks = result.faceLandmarks()[0]
-                val count =
-                        blinkDetector.process(
-                                landmarks,
-                                resultBundle.inputImageWidth,
-                                resultBundle.inputImageHeight
+            val faces = result.faceLandmarks()
+            if (faces.isNotEmpty()) {
+                val landmarks = faces[0]
+
+                val blinkResult =
+                    blinkDetector.process(
+                        landmarks,
+                        resultBundle.inputImageWidth,
+                        resultBundle.inputImageHeight
+                    )
+
+                binding.tvBlinkCount.text = "Blinks: ${blinkResult.blinkCount}"
+
+                val isDrowsy = drowsinessDetector.update(
+                    eyesClosed = blinkResult.eyesClosed,
+                    frameTimestampMs = result.timestampMs()
+                )
+
+                // Update status UI
+                when {
+                    isDrowsy -> {
+                        binding.tvStatus.text = "Status: DROWSY"
+                        binding.tvStatus.setTextColor(
+                            ContextCompat.getColor(this, android.R.color.holo_red_light)
                         )
-                binding.tvBlinkCount.text = "Blinks: $count"
+                    }
+                    blinkResult.eyesClosed -> {
+                        binding.tvStatus.text = "Status: Eyes closed"
+                        binding.tvStatus.setTextColor(
+                            ContextCompat.getColor(this, android.R.color.holo_orange_light)
+                        )
+                    }
+                    else -> {
+                        binding.tvStatus.text = "Status: SAFE"
+                        binding.tvStatus.setTextColor(
+                            ContextCompat.getColor(this, android.R.color.holo_green_light)
+                        )
+                    }
+                }
+
+                binding.overlay.setDrowsyState(isDrowsy)
+            } else {
+                binding.tvStatus.text = "Status: No face detected"
+                binding.tvStatus.setTextColor(
+                    ContextCompat.getColor(this, android.R.color.darker_gray)
+                )
+                binding.overlay.setDrowsyState(false)
             }
         }
     }

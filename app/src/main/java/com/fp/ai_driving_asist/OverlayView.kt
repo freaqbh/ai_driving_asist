@@ -23,6 +23,8 @@ class OverlayView(context: Context?, attrs: AttributeSet?) : View(context, attrs
     private var imageHeight: Int = 1
     private val LANDMARK_STROKE_WIDTH = 8F
 
+    private var isDrowsy: Boolean = false
+
     init {
         initPaints()
     }
@@ -100,6 +102,12 @@ class OverlayView(context: Context?, attrs: AttributeSet?) : View(context, attrs
             }
         }
     }
+
+    fun setDrowsyState(drowsy: Boolean) {
+        isDrowsy = drowsy
+        invalidate()
+    }
+
 
     fun setResults(
             faceLandmarkerResults: FaceLandmarkerResult,
