@@ -12,13 +12,18 @@ Mengantuk saat mengemudi adalah salah satu penyebab utama kecelakaan lalu lintas
 Aplikasi ini menggunakan kamera depan ponsel untuk melacak titik wajah (face landmarks) dan menganalisis perilaku mata serta mulut Anda untuk mendeteksi tanda-tanda kelelahan sebelum terlambat.
 
 ## Fitur Utama
-Real-time Monitoring: Memantau wajah pengemudi secara terus-menerus dengan latensi rendah.
-Deteksi Mata Tertutup (Blink Detection): Mengukur Eye Aspect Ratio (EAR) untuk mengetahui jika mata Anda tertutup terlalu lama (lebih dari 2 detik terdeteksi mengantuk, lebih dari 5 detik terdeteksi tertidur).
-Deteksi Menguap (Yawn Detection): Mengukur Mouth Aspect Ratio (MAR) untuk mendeteksi aktivitas menguap sebagai tanda awal kantuk.
-Sistem Peringatan Bertingkat:
-Status Drowsy: Peringatan "Anda Mengantuk!" saat terdeteksi menguap atau mata tertutup sebentar.
-Status Sleeping: Alarm suara dan peringatan merah "Anda Tertidur!" jika mata tertutup dalam durasi kritis.
-Audio Alert: Mengaktifkan alarm suara otomatis untuk membangunkan pengemudi saat bahaya terdeteksi.
+- Real-time Monitoring: Memantau wajah pengemudi secara terus-menerus dengan latensi rendah.
+
+- Deteksi Mata Tertutup (Blink Detection): Mengukur Eye Aspect Ratio (EAR) untuk mengetahui jika mata Anda tertutup terlalu lama (lebih dari 2 detik terdeteksi mengantuk, lebih dari 5 detik terdeteksi tertidur).
+
+- Deteksi Menguap (Yawn Detection): Mengukur Mouth Aspect Ratio (MAR) untuk mendeteksi aktivitas menguap sebagai tanda awal kantuk.
+
+- Sistem Peringatan Bertingkat:
+  Status Drowsy: Peringatan "Anda Mengantuk!" saat terdeteksi menguap atau mata tertutup sebentar.
+  
+  Status Sleeping: Alarm suara dan peringatan merah "Anda Tertidur!" jika mata tertutup dalam durasi kritis.
+  
+- Audio Alert: Mengaktifkan alarm suara otomatis untuk membangunkan pengemudi saat bahaya terdeteksi.
 
 
 janlup tambahin model mediapipe nya di app/src/main/assets/face_landmarker.task
