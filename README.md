@@ -19,6 +19,7 @@ Aplikasi ini menggunakan kamera depan ponsel untuk melacak titik wajah (face lan
 - Deteksi Menguap (Yawn Detection): Mengukur Mouth Aspect Ratio (MAR) untuk mendeteksi aktivitas menguap sebagai tanda awal kantuk.
 
 - Sistem Peringatan Bertingkat:
+  
   Status Drowsy: Peringatan "Anda Mengantuk!" saat terdeteksi menguap atau mata tertutup sebentar.
   
   Status Sleeping: Alarm suara dan peringatan merah "Anda Tertidur!" jika mata tertutup dalam durasi kritis.
