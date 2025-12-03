@@ -1,3 +1,12 @@
+## Anggota Kelompok:
+- M. Abhinaya Al Faruqi - 5027231011
+- M. Rizq Taufan - 5027231021
+- Adi Satria Pangestu - 5027231043
+- Randist Prawandha Putera - 5027231059
+- Nabiel Nizar Anwari - 5027231087
+- M. Nafi Firdaus - 5027231045
+- Nicholas Arya - 5027231058
+
 ## Latar Belakang Masalah
 Mengantuk saat mengemudi adalah salah satu penyebab utama kecelakaan lalu lintas. AI Driving Assistant hadir sebagai "mata kedua" Anda, memanfaatkan teknologi Computer Vision canggih untuk memantau tingkat kewaspadaan pengemudi secara real-time.
 
